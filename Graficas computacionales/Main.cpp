@@ -67,7 +67,7 @@ int main()
 		int num1 = 5;
 		int num2 = 9;
 		int num3 = 1;
-		cout << endl << "Este programa imprime el numero mayor entre 5 9 y 1" << endl << endl;
+		cout << endl << "Este programa imprime el numero menor entre 5 9 y 1" << endl << endl;
 		if (num1 < num2 && num1 < num3) {
 			cout << "El numero menor es " << num1;
 		}
