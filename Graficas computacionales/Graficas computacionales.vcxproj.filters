@@ -21,9 +21,15 @@
     <ClCompile Include="Rectangle.cpp">
       <Filter>Archivos de código fuente</Filter>
     </ClCompile>
+    <ClCompile Include="Employee.cpp">
+      <Filter>Archivos de código fuente</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Rectangle.h">
+      <Filter>Archivos de encabezado</Filter>
+    </ClInclude>
+    <ClInclude Include="Employee.h">
       <Filter>Archivos de encabezado</Filter>
     </ClInclude>
   </ItemGroup>

@@ -5,17 +5,16 @@ Autor: A01375762 Octavio Adrian Valencia Ballesteros
 *********************************************************/
 
 #include <iostream>
-#include "Rectangle.h"
+#include "Employee.h"
 using namespace std;
 
 int main()
 {
-	cout << "Este programa calcula el area y el perimetro de un rectangulo";
-	Rectangle rectangulo(10.0,5.0);
-	cout <<" de base "<< rectangulo.GetWidth();
-	cout <<" y altura "<< rectangulo.GetHeight();
-	cout <<endl<<endl<<"Area= " << rectangulo.GetArea();
-	cout << endl << "Perimetro= " << rectangulo.GetPerimeter();
+	Employee empleado(1375762,"Octavio","Valencia",30000);
+	cout <<"Nombre del empleado: "<< empleado.GetName()<<endl;
+	cout << "Salario anual: " << empleado.GetAnnualSalary() << endl;
+	cout << "Se te ha aumentado a un salario de: " << empleado.RaiseSalary(50)<<endl<<endl;
+	cout << "Resumen: "<<empleado.Print();
 	cin.get();
 	return 0;
 }
