@@ -1,0 +1,121 @@
+/*********************************************************
+Materia: Gráficas Computacionales
+Fecha: 23 de agosto del 2017
+Autor: A01375762 Octavio Adrian Valencia Ballesteros
+*********************************************************/
+
+#include <iostream>
+#include <GL/glew.h>
+#include <GL/freeglut.h>
+#include <glm/glm.hpp> //Libreria de matematicas
+#include <vector>
+
+//identificador del manager del VBO para un conjunto de vertices
+GLuint vao; //vertexarrayobject
+
+//Funcion que va a inicializar toda la memoria del programa
+void Initialize()
+{
+	//creamos una lista que va a almacenar las posiciones en dos dimensiones de un triangulo
+	//esto se crea en cpu
+	std::vector<glm::vec2>positions;
+	positions.push_back(glm::vec2(-1.0f, -1.0f));
+	positions.push_back(glm::vec2(1.0f, -1.0f));
+	positions.push_back(glm::vec2(0.0f, 1.0f));
+
+	//Creamos una lista de colores RGB
+	//esta lista está en cpu
+	std::vector<glm::vec3>colors;
+	colors.push_back(glm::vec3(1.0f, 0.0f, 0.0f));//rojo
+	colors.push_back(glm::vec3(0.0f, 1.0f, 0.0f));//verde
+	colors.push_back(glm::vec3(0.0f, 0.0f, 1.0f));//azul
+
+	//creamos un VAO y almacenamos el id en la variable vao
+	//este es el manager de VBOs
+	glGenVertexArrays(1,&vao);
+	//decimos a opengl que queremos utilizar el manager
+	//todos los VBOs que creemos a partir de este punto y hasta que desactivemos este VAO, se va a asociar a este manager
+	glBindVertexArray(vao);
+
+	//Identificador del VBO de posiciones, aqui lo vamos a almacenar
+	GLuint positionsVBO; //numero entero de OpenGL
+	
+	glGenBuffers(1, &positionsVBO);//creamos un VBO y almacenamos el id de la variable positionsVBO
+	glBindBuffer(GL_ARRAY_BUFFER, positionsVBO);//decimos a OpenGL que lo queremos usar como atributo
+	//asignamos los datos al buffer y lo mandamos a la tarjeta de video
+	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec2)*positions.size(), positions.data(), GL_STATIC_DRAW);
+	//quiero activar el primer atributo con indice 0 en la tarjeta de video
+	glEnableVertexAttribArray(0);
+	//configuramos el atributo con indice 0 en la tarjeta de video
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
+	//ya no voy a utilizar y desactivo el uso del VBO de posiciones
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+	//identificador del VBO de colores
+	GLuint colorsVBO;
+	glGenBuffers(1, &colorsVBO);
+	glBindBuffer(GL_ARRAY_BUFFER, colorsVBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3)*colors.size(), colors.data(), GL_STATIC_DRAW);
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 3,GL_FLOAT,GL_FALSE,0,nullptr);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+	//Digo que ya no quiero utilizar VAO. Ya no se asociaran mas VBOs a este VAO
+	glBindVertexArray(0);
+}
+
+void MainLoop()
+{
+	//borramos el buffer de color y de profundidad siempre al inicio de cada frame
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	
+	//Paso 1 no podemos hacer aun
+
+	//paso 2 activar un VAO
+	glBindVertexArray(vao);
+	//Paso 3 dibujamos
+	glDrawArrays(GL_TRIANGLES, 0, 3);//a partir del elemento 0 en la lista dibujamos 3 vectores
+	//Paso 4 desactivamos el VAO
+	glBindVertexArray(0);
+	//Paso 5 por hacer 
+
+	//Intercambia los buffers (el que se estaba rendereando con el que estaba mostrando)
+	glutSwapBuffers();
+}
+
+int main(int argc, char* argv[])
+{
+	//Inicializamos freeglut
+	//freeglut se encarga de generar y manejar ventanas
+	//usamos freeglut para crear una ventana para dibujar
+
+	glutInit(&argc, argv);
+	//Con esta linea informamos que estamos usando un pipeline de openGL programable (moderno)
+	glutInitContextProfile(GLUT_CORE_PROFILE);
+	//GLUTMAINLOOP una funcion que se manda a llamar con cada frame, eso es un evento
+	//Un evento que nos interesa es cuando alguine cierra la ventana
+	//en este caso dejamos de renderear y terminamos el programa
+	glutSetOption(GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_GLUTMAINLOOP_RETURNS);
+	//CONFIGURAMOS EL FRAMEBuffer y estamos solicitando un buffer de true color RGBA, uno de profundidad y uno segundo buffer para renderear (evitamos parpadeos al renderear)
+	glutInitDisplayMode(GLUT_RGBA | GLUT_DEPTH | GLUT_DOUBLE);
+	//Solicitamos una ventana inicial de 400x400 pixeles
+	glutInitWindowSize(400, 400);
+	//Se crea la ventana y le ponemos el título de ésta
+	glutCreateWindow("Hello World OpenGL");
+	//Esta funcion se mandara a llamar para dibujar un frame
+	glutDisplayFunc(MainLoop);
+
+	//Inicializamos GLEW. Esta libreia se encarga de obtener el API de OpenGL en la tarjeta de video
+	glewInit();
+	//Configuramos OpenGL y el buffer de color por default en el frame bufffer (se pone por default el color amarillo) glClearColor(R,G,B,A);
+	glClearColor(1.0f,1.0f,0.5f,1.0f);
+	//Empieza a ejecutar el MainLoop. Iniciamos la aplicacion grafica. El mian se pausara en esta linea hasta que se cierre la ventana de OpenGL
+
+
+	//Iniciamos la aplicacion grafica. el main se pausara en esta linea hasta que se cierre la ventana de Open GL
+	Initialize();
+
+	glutMainLoop();
+
+	return 0;
+}

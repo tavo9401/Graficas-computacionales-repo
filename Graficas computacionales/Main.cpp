@@ -1,137 +1,193 @@
-﻿/*********************************************************
-Materia: Gráficas Computacionales
-Fecha: 23 de agosto del 2017
-Autor: A01375762 Octavio Adrian Valencia Ballesteros
-*********************************************************/
-
-#include <iostream>
+﻿#include <iostream>
 #include <GL/glew.h>
 #include <GL/freeglut.h>
-#include <glm/glm.hpp> //Libreria de matematicas
+#include <glm/glm.hpp>
 #include <vector>
+#include "InputFile.h"
 
-//identificador del manager del VBO para un conjunto de vertices
-GLuint vao; //vertexarrayobject
+// Identificador del manager de VBOs para un conjunto de vertices.
+GLuint vao;
+//Identificador del manager de los Shaders (ShaderProgram)
+GLuint shaderProgram;
 
-			//Funcion que va a inicializar toda la memoria del programa
+// Función que va a inicializar toda la memoria del programa.
 void Initialize()
 {
-	//creamos una lista que va a almacenar las posiciones en dos dimensiones de un triangulo
-	//esto se crea en cpu
-	float rad1 = glm::radians(18.0f);
-	float rad2 = glm::radians(90.0f);
-	float rad3 = glm::radians(162.0f);
-	float rad4 = glm::radians(234.0f);
-	float rad5 = glm::radians(306.0f);
+	// Vamos a crear una lista que va a almacenar las posiciones
+	// en 2 dimensiones de un triángulo.
+	// Esto es en CPU y RAM.
+	std::vector<glm::vec2> positions;
+	positions.push_back(glm::vec2(-1.0f, -1.0f));
+	positions.push_back(glm::vec2(1.0f, -1.0f));
+	positions.push_back(glm::vec2(0.0f, 1.0f));
 
+	// Vamos a crear una lista para almacenar colores RGB
+	// Esta lista está en CPU y RAM
+	std::vector<glm::vec3> colors;
+	// RGB -> Rojo
+	colors.push_back(glm::vec3(1.0f, 0.0f, 0.0f));
+	// RGB -> Verde
+	colors.push_back(glm::vec3(0.0f, 1.0f, 0.0f));
+	// RGB -> Azul
+	colors.push_back(glm::vec3(0.0f, 0.0f, 1.0f));
 
-	std::vector<glm::vec2>positions;
-	positions.push_back(glm::vec2(glm::cos(rad2), glm::sin(rad2)));
-	positions.push_back(glm::vec2(0.5*(glm::cos(rad2)), 0.5*(glm::sin(rad2))));
-	positions.push_back(glm::vec2(glm::cos(rad1), glm::sin(rad1)));
-	positions.push_back(glm::vec2(0.5*(glm::cos(rad1)), 0.5*(glm::sin(rad1))));
-	positions.push_back(glm::vec2(glm::cos(rad5), glm::sin(rad5)));
-	positions.push_back(glm::vec2(0.5*(glm::cos(rad5)), 0.5*(glm::sin(rad5))));
-	positions.push_back(glm::vec2(glm::cos(rad4), glm::sin(rad4)));
-	positions.push_back(glm::vec2(0.5*(glm::cos(rad4)), 0.5*(glm::sin(rad4))));
-	positions.push_back(glm::vec2(glm::cos(rad3), glm::sin(rad3)));
-	positions.push_back(glm::vec2(0.5*(glm::cos(rad3)), 0.5*(glm::sin(rad3))));
-	positions.push_back(glm::vec2(0.5*(glm::cos(rad3)), 0.5*(glm::sin(rad3))));
-	positions.push_back(glm::vec2(glm::cos(rad2), glm::sin(rad2)));
-	
-
-	/*//Creamos una lista de colores RGB
-	//esta lista está en cpu
-	std::vector<glm::vec3>colors;
-	colors.push_back(glm::vec3(1.0f, 0.0f, 0.0f));//rojo
-	colors.push_back(glm::vec3(0.0f, 1.0f, 0.0f));//verde
-	colors.push_back(glm::vec3(0.0f, 0.0f, 1.0f));//azul*/
-
-												  //creamos un VAO y almacenamos el id en la variable vao
-												  //este es el manager de VBOs
+	// Creamos un VAO y almacenamos el id en la variable vao.
+	// Este es el manager de VBOs
 	glGenVertexArrays(1, &vao);
-	//decimos a opengl que queremos utilizar el manager
-	//todos los VBOs que creemos a partir de este punto y hasta que desactivemos este VAO, se va a asociar a este manager
+	// Le decimos a OpenGL que queremos utilizar el manager.
+	// Todos los VBOs que creemos a partir de este punto y hasta
+	// que desactivemos este VAO, se van a asociar a este manager.
 	glBindVertexArray(vao);
 
-	//Identificador del VBO de posiciones, aqui lo vamos a almacenar
-	GLuint positionsVBO; //numero entero de OpenGL
-
-	glGenBuffers(1, &positionsVBO);//creamos un VBO y almacenamos el id de la variable positionsVBO
-	glBindBuffer(GL_ARRAY_BUFFER, positionsVBO);//decimos a OpenGL que lo queremos usar como atributo
-												//asignamos los datos al buffer y lo mandamos a la tarjeta de video
-	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec2)*positions.size(), positions.data(), GL_STATIC_DRAW);
-	//quiero activar el primer atributo con indice 0 en la tarjeta de video
+	// Identificador del VBO de posiciones. Aqui lo vamos a almacenar.
+	GLuint positionsVBO;
+	// Creamos un VBO y almacenamos el id en la variable positionsVBO
+	glGenBuffers(1, &positionsVBO);
+	// Le decimos a OpenGL que lo queremos utilizar como un atributo.
+	glBindBuffer(GL_ARRAY_BUFFER, positionsVBO);
+	// Asignamos los datos al buffer y los mandamos a la tarjeta de video.
+	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec2) * positions.size(),
+		positions.data(), GL_STATIC_DRAW);
+	// Quiero activar el atributo con indice 0 en la tarjeta de video
 	glEnableVertexAttribArray(0);
-	//configuramos el atributo con indice 0 en la tarjeta de video
+	// Configuramos el atributo con indice 0 en la tarjeta de video.
 	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
-	//ya no voy a utilizar y desactivo el uso del VBO de posiciones
+	// Desactivamos el uso del VBO de posiciones
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-	/*//identificador del VBO de colores
 	GLuint colorsVBO;
 	glGenBuffers(1, &colorsVBO);
 	glBindBuffer(GL_ARRAY_BUFFER, colorsVBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3)*colors.size(), colors.data(), GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * colors.size(),colors.data(), GL_STATIC_DRAW);
 	glEnableVertexAttribArray(1);
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);*/
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-	//Digo que ya no quiero utilizar VAO. Ya no se asociaran mas VBOs a este VAO
+	// Ya no quiero utilizar el VAO. Ya no se asociarán más VBOs a este VAO
 	glBindVertexArray(0);
+
+	InputFile ifile;
+
+	//Leemos codigo fuente del vertex shadre con la clase auxiliar InputFile
+	ifile.Read("Default.vert");
+	std::string vertexSource = ifile.GetContents();
+	//Hacemos un cast porque no le podemos mandar strings a OpenGL. Necesitamos mandarle const GLchar*
+	const GLchar *vertexSource_c = (const GLchar*)vertexSource.c_str();
+	//Creamos un shader de tipo VertexShader y guardamos su id en la variable vertexShaderHandle
+	GLuint vertexShaderHandle = glCreateShader(GL_VERTEX_SHADER);
+	//Le mandamos el codigo fuente que leimos previamente a OpenGL
+	glShaderSource(vertexShaderHandle, 1, &vertexSource_c, nullptr);
+	//Le pedimos que compile
+	glCompileShader(vertexShaderHandle);
+
+	GLint vertexShaderCompileSuccess = 0;
+	glGetShaderiv(vertexShaderHandle, GL_COMPILE_STATUS, &vertexShaderCompileSuccess);
+	if (vertexShaderCompileSuccess == GL_FALSE)
+	{
+		GLint logLength = 0;
+		glGetShaderiv(vertexShaderHandle, GL_INFO_LOG_LENGTH, &logLength);
+		if (logLength > 0)
+		{
+			std::vector<GLchar>compileLog(logLength);
+			glGetShaderInfoLog(vertexShaderHandle, logLength, &logLength, &compileLog[0]);
+
+			for (int i = 0; i < logLength; i++)
+			{
+				std::cout << compileLog[i];
+			}
+			std::cout << std::endl;
+		}
+		std::cout << "Shader Default.vert did not compiled" << std::endl;
+	}
+
+	//Leemos codigo fuente del fragment shadre con la clase auxiliar InputFile
+	ifile.Read("Default.frag");
+	std::string fragmentSource = ifile.GetContents();
+	//Hacemos un cast porque no le podemos mandar strings a OpenGL. Necesitamos mandarle const GLchar*
+	const GLchar *fragmentSource_c = (const GLchar*)fragmentSource.c_str();
+	//Creamos un shader de tipo fragmentShader y guardamos su id en la variable fragmentShaderHandle
+	GLuint fragmentShaderHandle = glCreateShader(GL_FRAGMENT_SHADER);
+	//Le mandamos el codigo fuente que leimos previamente a OpenGL
+	glShaderSource(fragmentShaderHandle, 1, &fragmentSource_c, nullptr);
+	//Le pedimos que compile
+	glCompileShader(fragmentShaderHandle);
+
+	//Creamos el manager de los shaders. Almacenamos el id en la variable shader´program
+	shaderProgram = glCreateProgram();
+	//este manager va a administrar el vertex shader con identificador vertexShaderHandle
+	glAttachShader(shaderProgram, vertexShaderHandle);
+	//este manager va a administrar el fragment shader con identificador fragmentShaderHandle
+	glAttachShader(shaderProgram, fragmentShaderHandle);
+	//Asociamos el inidice de buffer (VBO) de posiciones con el nombre de la variable correspondiente en el shader
+	glBindAttribLocation(shaderProgram, 0, "VertexPosition");
+	//Asciamos el indice del buffer (VBO) de colores con el nombre de la variable correspondiente con el shader
+	glBindAttribLocation(shaderProgram, 1, "VertexColor");
+	//Verificamos que las etapas de los shaders pueden trabajar en conjunto
+	glLinkProgram(shaderProgram);
+
 }
 
 void MainLoop()
 {
-	//borramos el buffer de color y de profundidad siempre al inicio de cada frame
+	// Borramos el buffer de color y profundidad siempre al inicio de un nuevo frame.
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	//Paso 1 no podemos hacer aun
-
-	//paso 2 activar un VAO
+	// Paso 1: Activar el programa shader (manager)
+	glUseProgram(shaderProgram);
+	// Paso 2: Activar un VAO
 	glBindVertexArray(vao);
-	//Paso 3 dibujamos
-	glDrawArrays(GL_TRIANGLES, 0, 4);//a partir del elemento 0 en la lista dibujamos 3 vectores
-									 //Paso 4 desactivamos el VAO
+	// Paso 3: Dibujamos
+	glDrawArrays(GL_TRIANGLES, 0, 3);
+	// Paso 4: Desactivamos el VAO
 	glBindVertexArray(0);
-	//Paso 5 por hacer 
+	// Paso 5  Desactivamos el programa shader (manager)
+	glUseProgram(0);
 
-	//Intercambia los buffers (el que se estaba rendereando con el que estaba mostrando)
+	// Intercambiar los buffers (el que se estaba rendereando con el que se estaba
+	// mostrando).
 	glutSwapBuffers();
 }
 
 int main(int argc, char* argv[])
 {
-	//Inicializamos freeglut
-	//freeglut se encarga de generar y manejar ventanas
-	//usamos freeglut para crear una ventana para dibujar
-
+	// Inicializamos freeglut. 
+	// Freeglut se encarga de generar y manejar ventanas.
+	// Utilizamos freeglut para crear una ventana donde vamos a dibujar.
 	glutInit(&argc, argv);
-	//Con esta linea informamos que estamos usando un pipeline de openGL programable (moderno)
+	// Tenemos que informar que queremos trabajar con el pipeline
+	// programable (OpenGL moderno).
 	glutInitContextProfile(GLUT_CORE_PROFILE);
-	//GLUTMAINLOOP una funcion que se manda a llamar con cada frame, eso es un evento
-	//Un evento que nos interesa es cuando alguine cierra la ventana
-	//en este caso dejamos de renderear y terminamos el programa
+	// Freeglut nos permite configurar eventos que ocurren en la ventana.
+	// Un evento que nos interesa es cuando alguien cierra la ventana.
+	// En este caso, simplemente dejamos de renderear y terminamos el programa.
 	glutSetOption(GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_GLUTMAINLOOP_RETURNS);
-	//CONFIGURAMOS EL FRAMEBuffer y estamos solicitando un buffer de true color RGBA, uno de profundidad y uno segundo buffer para renderear (evitamos parpadeos al renderear)
+	// Configuramos el framebuffer. En este caso estamos solicitando un buffer
+	// de color true color RGBA, un buffer de profundidad y un segundo buffer 
+	// para rendererar (evitamos parpadeos al renderear).
 	glutInitDisplayMode(GLUT_RGBA | GLUT_DEPTH | GLUT_DOUBLE);
-	//Solicitamos una ventana inicial de 400x400 pixeles
+	// Solicitamos una ventana de 400x400 pixeles.
 	glutInitWindowSize(400, 400);
-	//Se crea la ventana y le ponemos el título de ésta
+	// Creamos y abrimos la ventana con un título personalizado.
 	glutCreateWindow("Hello World OpenGL");
-	//Esta funcion se mandara a llamar para dibujar un frame
+	// Asociar una función de render. Esta función se mandará a llamar para 
+	// dibujar un frame.
 	glutDisplayFunc(MainLoop);
 
-	//Inicializamos GLEW. Esta libreia se encarga de obtener el API de OpenGL en la tarjeta de video
+	// Inicializamos GLEW. Esta librería se encarga de obtener el API
+	// de OpenGL de nuestra tarjeta de video. SHAME ON YOU MICROSOFT.
 	glewInit();
-	//Configuramos OpenGL y el buffer de color por default en el frame bufffer (se pone por default el color amarillo) glClearColor(R,G,B,A);
+
+	// COnfigurar OpenGL. Este es el color por default del buffer de color
+	// en el framebuffer.
 	glClearColor(1.0f, 1.0f, 0.5f, 1.0f);
-	//Empieza a ejecutar el MainLoop. Iniciamos la aplicacion grafica. El mian se pausara en esta linea hasta que se cierre la ventana de OpenGL
 
+	std::cout << glGetString(GL_VERSION) << std::endl;
 
-	//Iniciamos la aplicacion grafica. el main se pausara en esta linea hasta que se cierre la ventana de Open GL
+	// Configurar la memoria que la aplicación va a necesitar.
 	Initialize();
 
+	// Iniciamos la aplicacion gráfica. El main se pausará en estea línea
+	// hasta que se cierre la ventana de OpenGL.
 	glutMainLoop();
 
 	return 0;
