@@ -10,8 +10,8 @@ class Shader
 public:
 	Shader();
 	~Shader();
-	void CreateShader(std::string path, GLenum type);
-	GLuint GetHandle();
+	void createShader(std::string path, GLenum type);
+	GLuint getHandle();
 
 private:
 	GLuint _shaderHandle;

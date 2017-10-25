@@ -10,12 +10,12 @@ class Mesh
 public:
 	Mesh();
 	~Mesh();
-	void CreateMesh(GLint vertexCount);
-	void Draw(GLenum primitive);
-	void SetPositionAttribute(vector<vec2> positions,GLenum usage, GLuint locationIndex);
-	void SetPositionAttribute(vector<vec3> positions, GLenum usage, GLuint locationIndex);
-	void SetColorAttribute(vector<vec3> colors, GLenum usage, GLuint locationIndex);
-	void SetColorAttribute(vector<vec4> colors, GLenum usage, GLuint locationIndex);
+	void CreateMesh(GLint vertexCount);//los vertices que se vayan a usar 
+	void Draw(GLenum primitive);//tipo de geometria
+	void SetPositionAttribute(std::vector<glm::vec2> positions,GLenum usage, GLuint locationIndex);
+	void SetPositionAttribute(std::vector<glm::vec3> positions, GLenum usage, GLuint locationIndex);
+	void SetColorAttribute(std::vector<glm::vec3> colors, GLenum usage, GLuint locationIndex);
+	void SetColorAttribute(std::vector<glm::vec4> colors, GLenum usage, GLuint locationIndex);
 
 private:
 	GLuint _vertexArrayObject;

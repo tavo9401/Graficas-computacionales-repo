@@ -1,52 +1,63 @@
 #include "Shader.h"
+#include "InputFile.h"
 #include <fstream>
 #include <iostream>
 #include <sstream>
-#include <iostream>
 #include <GL/glew.h>
 #include <GL/freeglut.h>
 #include <glm/glm.hpp>
 #include <vector>
+#include <memory>
+
 
 Shader::Shader()
 {
-	GLuint _shaderHandle = 0;
+	_shaderHandle = 0;
 }
 
 Shader::~Shader()
 {
-	glDeleteBuffers(1, _shaderHandle);
+	glDeleteShader(_shaderHandle);
 }
-
-void Shader::CreateShader(std::string path, GLenum type)
+void Shader::createShader(std::string path, GLenum type)
 {
-	InputFile path;
+	if (_shaderHandle > 0) 
+	{
+		glDeleteShader(_shaderHandle);
+	}
+	InputFile ifile;
 
-	//Leemos codigo fuente del vertex shadre con la clase auxiliar InputFile
-	path.Read("Default.vert");
-	std::string vertexSource = path.GetHandle();
-	//Hacemos un cast porque no le podemos mandar strings a OpenGL. Necesitamos mandarle const GLchar*
-	const GLchar *vertexSource_c = (const GLchar*)vertexSource.c_str();
-	//Creamos un shader de tipo VertexShader y guardamos su id en la variable vertexShaderHandle
-	GLuint shaderHandle = glCreateShader(GL_VERTEX_SHADER);
-	//Le mandamos el codigo fuente que leimos previamente a OpenGL
-	glShaderSource(vertexShaderHandle, 1, &vertexSource_c, nullptr);
-	//Le pedimos que compile
-	glCompileShader(vertexShaderHandle);
+	ifile.Read(path);
+	std::string shaderSource = ifile.GetContents();
+	const GLchar *shaderSource_c = (const GLchar*)shaderSource.c_str();
+	_shaderHandle = glCreateShader(type);
+	glShaderSource(_shaderHandle, 1, &shaderSource_c, nullptr);
+	glCompileShader(_shaderHandle);
 
-	path.Read("Default.frag");
-	std::string fragmentSource = path.GetHandle();
-	//Hacemos un cast porque no le podemos mandar strings a OpenGL. Necesitamos mandarle const GLchar*
-	const GLchar *fragmentSource_c = (const GLchar*)fragmentSource.c_str();
-	//Creamos un shader de tipo fragmentShader y guardamos su id en la variable fragmentShaderHandle
-	GLuint fragmentShaderHandle = glCreateShader(GL_FRAGMENT_SHADER);
-	//Le mandamos el codigo fuente que leimos previamente a OpenGL
-	glShaderSource(fragmentShaderHandle, 1, &fragmentSource_c, nullptr);
-	//Le pedimos que compile
-	glCompileShader(fragmentShaderHandle);
+	GLint vertexShaderCompileSuccess = 0;
+	glGetShaderiv(_shaderHandle, GL_COMPILE_STATUS,
+		&vertexShaderCompileSuccess);
+	if (vertexShaderCompileSuccess == GL_FALSE)
+	{
+		GLint logLength = 0;
+		glGetShaderiv(_shaderHandle, GL_INFO_LOG_LENGTH, &logLength);
+		if (logLength > 0)
+		{
+			std::vector<GLchar> compileLog(logLength);
+			glGetShaderInfoLog(_shaderHandle, logLength, &logLength,
+				&compileLog[0]);
+
+			for (int i = 0; i < logLength; i++)
+			{
+				std::cout << compileLog[i];
+			}
+			std::cout << std::endl;
+		}
+		std::cout << "Shader Default.vert did not compiled." << std::endl;
+	}
 }
 
-GLuint Shader::GetHandle()
+GLuint Shader::getHandle() 
 {
 	return _shaderHandle;
-}
+};

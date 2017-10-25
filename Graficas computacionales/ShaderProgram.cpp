@@ -1,66 +1,62 @@
+#include "InputFile.h"
 #include "ShaderProgram.h"
+#include "Shader.h"
+#include <fstream>
+#include <iostream>
+#include <sstream>
+#include <GL/glew.h>
+#include <GL/freeglut.h>
+#include <glm/glm.hpp>
+#include <vector>
+#include <memory>
 
 ShaderProgram::ShaderProgram()
 {
-	GLuint _programHandle = 0;
+	_programHandle = 0;
 }
 
-ShaderProgram::~ShaderProgram()
-{
-	DeleteProgram();
-}
-
-void ShaderProgram::CreateProgram()
+void ShaderProgram::createProgram()
 {
 	_programHandle = glCreateProgram();
 }
-
-void ShaderProgram::AttachShader(std::string name, GLenum type)
+void ShaderProgram::attachShader(std::string name, GLenum type)
 {
-	//Create and add the shaders to a list
-	std::unique_ptr<Shader>shader(new Shader);
-	shader->CreateShader(name,type);
+	std::unique_ptr<Shader> shader(new Shader);
+	shader->createShader(name, type);
 	_attachedShaders.push_back(std::move(shader));
 }
-
-void ShaderProgram::LinkProgram()
+void ShaderProgram::linkProgram()
 {
+	for (int i = 0; i < _attachedShaders.size(); i++) {
+		glAttachShader(_programHandle, _attachedShaders[i]->getHandle());
+	}
 	glLinkProgram(_programHandle);
-	DeleteAndDetachShaders();
+	deleteAndDetachShaders();
 }
-
-void ShaderProgram::Activate()
+void ShaderProgram::deleteAndDetachShaders()
+{
+	for (int i = 0; i < _attachedShaders.size(); i++) {
+		glDetachShader(_programHandle, _attachedShaders[i]->getHandle());
+	}
+	_attachedShaders.clear();
+}
+void ShaderProgram::activate()
 {
 	glUseProgram(_programHandle);
 }
-
-void ShaderProgram::Deactivate()
+void ShaderProgram::deactivate()
 {
 	glUseProgram(0);
 }
-
-void ShaderProgram::SetAttribute(GLuint locationIndex, std::string name)
+void ShaderProgram::setAttribute(GLuint locationIndex, std::string name)
 {
-	glAttachShader(_programHandle, vertexShaderHandle);
-	//este manager va a administrar el fragment shader con identificador fragmentShaderHandle
-	glAttachShader(_programHandle, fragmentShaderHandle);
+	glBindAttribLocation(_programHandle, locationIndex, name.c_str());
 }
-
-void ShaderProgram::SetUniformf(std::string name, float value)
+void ShaderProgram::deleteProgram()
 {
-	glBindAttribLocation(_programHandle, 0, "VertexPosition");
-	//Asciamos el indice del buffer (VBO) de colores con el nombre de la variable correspondiente con el shader
-	glBindAttribLocation(_programHandle, 1, "VertexColor");
+	deleteAndDetachShaders();
+	glDeleteProgram(_programHandle);
 }
-
-void ShaderProgram::SetUniformf(std::string name, float x, float y)
-{
-}
-
-void ShaderProgram::SetUniformf(std::string name, float x, float y, float z)
-{
-}
-
-void ShaderProgram::SetUniformf(std::string name, float x, float y, float z, float w)
-{
+ShaderProgram::ShaderProgram() {
+	deleteProgram();
 }
