@@ -17,6 +17,7 @@ Shader::Shader()
 
 Shader::~Shader()
 {
+	//BORRAMOS EL SHADER
 	glDeleteShader(_shaderHandle);
 }
 void Shader::createShader(std::string path, GLenum type)
@@ -30,13 +31,18 @@ void Shader::createShader(std::string path, GLenum type)
 	ifile.Read(path);
 	std::string shaderSource = ifile.GetContents();
 	const GLchar *shaderSource_c = (const GLchar*)shaderSource.c_str();
+
+	// ETAPA DEL SHADER DONDE SE CREAN LOS TIPOS DE SHADERS
 	_shaderHandle = glCreateShader(type);
+
+	//SE CARGA EL CODIGO DEL SHADER
 	glShaderSource(_shaderHandle, 1, &shaderSource_c, nullptr);
+	//COMPILA EL CODIGO FUENTE DEL SHADER CARGADO 
 	glCompileShader(_shaderHandle);
 
 	GLint vertexShaderCompileSuccess = 0;
-	glGetShaderiv(_shaderHandle, GL_COMPILE_STATUS,
-		&vertexShaderCompileSuccess);
+	//SE OBTIENE INFO DEL SHADER CARGADO YVERIFICAMOS SI HAY ERRORES
+	glGetShaderiv(_shaderHandle, GL_COMPILE_STATUS,&vertexShaderCompileSuccess);
 	if (vertexShaderCompileSuccess == GL_FALSE)
 	{
 		GLint logLength = 0;
