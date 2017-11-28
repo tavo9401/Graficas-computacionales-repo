@@ -1,17 +1,41 @@
-﻿/*#include <iostream>
+﻿#include <IL/il.h>
 #include <GL/glew.h>
 #include <GL/freeglut.h>
+#include <iostream>
 #include <glm/glm.hpp>
 #include <vector>
-#include "InputFile.h"
+#include "Camera.h"
 #include "Mesh.h"
-#include "Shader.h"
 #include "ShaderProgram.h"
+#include "Transform.h"
+#include "Texture2D.h"
 
-// Identificador del manager de VBOs para un conjunto de vertices.
-GLuint vao;
-//Identificador del manager de los Shaders (ShaderProgram)
-GLuint shaderProgram;
+
+Camera _camera;
+Mesh _mesh;
+Transform _transformPadre;
+Transform _transformHijo1;
+Transform _transformHijo2;
+Transform _transformHijo3;
+Transform _transformHijo4;
+Transform _transformNieto;
+Transform _transformJoint1;
+Transform _transformJoint2;
+Transform _transformJoint3;
+Transform _transformJoint4;
+Transform _transformJointNieto;
+ShaderProgram _shaderProgram;
+Texture2D myTexture;
+glm::vec3 lPosition;
+glm::vec3 lColor;
+glm::vec3 cPosition;
+glm::vec2 tPosition;
+float angulozneg = 0;
+float angulozpos = 0;
+float anguloxneg = 0;
+float anguloxpos = 0;
+float anguloxposnieto = 0;
+float delta = -0.01;
 
 // Función que va a inicializar toda la memoria del programa.
 void Initialize()
@@ -19,115 +43,190 @@ void Initialize()
 	// Vamos a crear una lista que va a almacenar las posiciones
 	// en 2 dimensiones de un triángulo.
 	// Esto es en CPU y RAM.
-	std::vector<glm::vec2> positions;
-	positions.push_back(glm::vec2(-1.0f, -1.0f));
-	positions.push_back(glm::vec2(1.0f, -1.0f));
-	positions.push_back(glm::vec2(0.0f, 1.0f));
+	std::vector<glm::vec3> positions;
+	// Cara frontal
+	positions.push_back(glm::vec3(-12.0f, -1.0f, 12.0f));
+	positions.push_back(glm::vec3(12.0f, -1.0f, 12.0f));
+	positions.push_back(glm::vec3(12.0f, 1.0f, 12.0f));
+	positions.push_back(glm::vec3(-12.0f, 1.0f, 12.0f));
+	// Cara lateral derecha
+	positions.push_back(glm::vec3(12.0f, -1.0f, 12.0f));
+	positions.push_back(glm::vec3(12.0f, -1.0f, -12.0f));
+	positions.push_back(glm::vec3(12.0f, 1.0f, -12.0f));
+	positions.push_back(glm::vec3(12.0f, 1.0f, 12.0f));
+	//Cara trasera
+	positions.push_back(glm::vec3(12.0f, -1.0f, -12.0f));
+	positions.push_back(glm::vec3(-12.0f, -1.0f, -12.0f));
+	positions.push_back(glm::vec3(-12.0f, 1.0f, -12.0f));
+	positions.push_back(glm::vec3(12.0f, 1.0f, -12.0f));
+	// Cara lateral izquierda
+	positions.push_back(glm::vec3(-12.0f, -1.0f, -12.0f));
+	positions.push_back(glm::vec3(-12.0f, -1.0f, 12.0f));
+	positions.push_back(glm::vec3(-12.0f, 1.0f, 12.0f));
+	positions.push_back(glm::vec3(-12.0f, 1.0f, -12.0f));
+	// Cara superior
+	positions.push_back(glm::vec3(-12.0f, 1.0f, 12.0f));
+	positions.push_back(glm::vec3(12.0f, 1.0f, 12.0f));
+	positions.push_back(glm::vec3(12.0f, 1.0f, -12.0f));
+	positions.push_back(glm::vec3(-12.0f, 1.0f, -12.0f));
+	// Cara inferior
+	positions.push_back(glm::vec3(-12.0f, -1.0f, -12.0f));
+	positions.push_back(glm::vec3(12.0f, -1.0f, -12.0f));
+	positions.push_back(glm::vec3(12.0f, -1.0f, 12.0f));
+	positions.push_back(glm::vec3(-12.0f, -1.0f, 12.0f));
 
 	// Vamos a crear una lista para almacenar colores RGB
 	// Esta lista está en CPU y RAM
 	std::vector<glm::vec3> colors;
-	// RGB -> Rojo
+	// Cara frontal
 	colors.push_back(glm::vec3(1.0f, 0.0f, 0.0f));
-	// RGB -> Verde
+	colors.push_back(glm::vec3(1.0f, 0.0f, 0.0f));
+	colors.push_back(glm::vec3(1.0f, 0.0f, 0.0f));
+	colors.push_back(glm::vec3(1.0f, 0.0f, 0.0f));
+	// Cara lateral derecha
 	colors.push_back(glm::vec3(0.0f, 1.0f, 0.0f));
-	// RGB -> Azul
+	colors.push_back(glm::vec3(0.0f, 1.0f, 0.0f));
+	colors.push_back(glm::vec3(0.0f, 1.0f, 0.0f));
+	colors.push_back(glm::vec3(0.0f, 1.0f, 0.0f));
+	// Cara trasera
+	colors.push_back(glm::vec3(1.0f, 0.0f, 0.0f));
+	colors.push_back(glm::vec3(1.0f, 0.0f, 0.0f));
+	colors.push_back(glm::vec3(1.0f, 0.0f, 0.0f));
+	colors.push_back(glm::vec3(1.0f, 0.0f, 0.0f));
+	// Cara lateral izquierda
+	colors.push_back(glm::vec3(0.0f, 1.0f, 0.0f));
+	colors.push_back(glm::vec3(0.0f, 1.0f, 0.0f));
+	colors.push_back(glm::vec3(0.0f, 1.0f, 0.0f));
+	colors.push_back(glm::vec3(0.0f, 1.0f, 0.0f));
+	// Cara superior
+	colors.push_back(glm::vec3(0.0f, 0.0f, 1.0f));
+	colors.push_back(glm::vec3(0.0f, 0.0f, 1.0f));
+	colors.push_back(glm::vec3(0.0f, 0.0f, 1.0f));
+	colors.push_back(glm::vec3(0.0f, 0.0f, 1.0f));
+	// Cara inferior
+	colors.push_back(glm::vec3(0.0f, 0.0f, 1.0f));
+	colors.push_back(glm::vec3(0.0f, 0.0f, 1.0f));
+	colors.push_back(glm::vec3(0.0f, 0.0f, 1.0f));
 	colors.push_back(glm::vec3(0.0f, 0.0f, 1.0f));
 
-	// Creamos un VAO y almacenamos el id en la variable vao.
-	// Este es el manager de VBOs
-	glGenVertexArrays(1, &vao);
-	// Le decimos a OpenGL que queremos utilizar el manager.
-	// Todos los VBOs que creemos a partir de este punto y hasta
-	// que desactivemos este VAO, se van a asociar a este manager.
-	glBindVertexArray(vao);
+	//Normales
+	std::vector<glm::vec3> normales;
+	// Cara frontal
+	normales.push_back(glm::vec3(0.0f, 0.0f, 1.0f));
+	normales.push_back(glm::vec3(0.0f, 0.0f, 1.0f));
+	normales.push_back(glm::vec3(0.0f, 0.0f, 1.0f));
+	normales.push_back(glm::vec3(0.0f, 0.0f, 1.0f));
+	// Cara lateral derecha
+	normales.push_back(glm::vec3(1.0f, 0.0f, 0.0f));
+	normales.push_back(glm::vec3(1.0f, 0.0f, 0.0f));
+	normales.push_back(glm::vec3(1.0f, 0.0f, 0.0f));
+	normales.push_back(glm::vec3(1.0f, 0.0f, 0.0f));
+	//Cara Trasera
+	normales.push_back(glm::vec3(0.0f, 0.0f, -1.0f)); //8
+	normales.push_back(glm::vec3(0.0f, 0.0f, -1.0f)); //9
+	normales.push_back(glm::vec3(0.0f, 0.0f, -1.0f));//10
+	normales.push_back(glm::vec3(0.0f, 0.0f, -1.0f));//11
 
-	// Identificador del VBO de posiciones. Aqui lo vamos a almacenar.
-	GLuint positionsVBO;
-	// Creamos un VBO y almacenamos el id en la variable positionsVBO
-	glGenBuffers(1, &positionsVBO);
-	// Le decimos a OpenGL que lo queremos utilizar como un atributo.
-	glBindBuffer(GL_ARRAY_BUFFER, positionsVBO);
-	// Asignamos los datos al buffer y los mandamos a la tarjeta de video.
-	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec2) * positions.size(),
-		positions.data(), GL_STATIC_DRAW);
-	// Quiero activar el atributo con indice 0 en la tarjeta de video
-	glEnableVertexAttribArray(0);
-	// Configuramos el atributo con indice 0 en la tarjeta de video.
-	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
-	// Desactivamos el uso del VBO de posiciones
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
+													 //Cara lateral izquierda
+	normales.push_back(glm::vec3(-1.0f, 0.0f, 0.0f));//12
+	normales.push_back(glm::vec3(-1.0f, 0.0f, 0.0f));//13
+	normales.push_back(glm::vec3(-1.0f, 0.0f, 0.0f));//14
+	normales.push_back(glm::vec3(-1.0f, 0.0f, 0.0f));//15
 
-	GLuint colorsVBO;
-	glGenBuffers(1, &colorsVBO);
-	glBindBuffer(GL_ARRAY_BUFFER, colorsVBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * colors.size(),colors.data(), GL_STATIC_DRAW);
-	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
+													 //Cara Arriba
+	normales.push_back(glm::vec3(0.0f, 1.0f, 0.0f)); //16
+	normales.push_back(glm::vec3(0.0f, 1.0f, 0.0f)); //17
+	normales.push_back(glm::vec3(0.0f, 1.0f, 0.0f));//18
+	normales.push_back(glm::vec3(0.0f, 1.0f, 0.0f));//19
 
-	// Ya no quiero utilizar el VAO. Ya no se asociarán más VBOs a este VAO
-	glBindVertexArray(0);
+													//Cara abajo
+	normales.push_back(glm::vec3(0.0f, -1.0f, 0.0f));//20
+	normales.push_back(glm::vec3(0.0f, -1.0f, 0.0f));//21
+	normales.push_back(glm::vec3(0.0f, -1.0f, 0.0f));//22
+	normales.push_back(glm::vec3(0.0f, -1.0f, 0.0f));//23
 
-	InputFile ifile;
 
-	//Leemos codigo fuente del vertex shadre con la clase auxiliar InputFile
-	ifile.Read("Default.vert");
-	std::string vertexSource = ifile.GetContents();
-	//Hacemos un cast porque no le podemos mandar strings a OpenGL. Necesitamos mandarle const GLchar*
-	const GLchar *vertexSource_c = (const GLchar*)vertexSource.c_str();
-	//Creamos un shader de tipo VertexShader y guardamos su id en la variable vertexShaderHandle
-	GLuint vertexShaderHandle = glCreateShader(GL_VERTEX_SHADER);
-	//Le mandamos el codigo fuente que leimos previamente a OpenGL
-	glShaderSource(vertexShaderHandle, 1, &vertexSource_c, nullptr);
-	//Le pedimos que compile
-	glCompileShader(vertexShaderHandle);
+	//Lista de TEXTURAS
+	std::vector<glm::vec2> texturas;
+	// Cara frontal
+	texturas.push_back(glm::vec2(0.0f, 1.0f));
+	texturas.push_back(glm::vec2(0.0f, 0.0f));
+	texturas.push_back(glm::vec2(1.0f, 0.0f));
+	texturas.push_back(glm::vec2(1.0f, 1.0f));
+	// Cara lateral derecha
+	texturas.push_back(glm::vec2(0.0f, 1.0f));
+	texturas.push_back(glm::vec2(0.0f, 0.0f));
+	texturas.push_back(glm::vec2(1.0f, 0.0f));
+	texturas.push_back(glm::vec2(1.0f, 1.0f));
 
-	GLint vertexShaderCompileSuccess = 0;
-	glGetShaderiv(vertexShaderHandle, GL_COMPILE_STATUS, &vertexShaderCompileSuccess);
-	if (vertexShaderCompileSuccess == GL_FALSE)
-	{
-		GLint logLength = 0;
-		glGetShaderiv(vertexShaderHandle, GL_INFO_LOG_LENGTH, &logLength);
-		if (logLength > 0)
-		{
-			std::vector<GLchar>compileLog(logLength);
-			glGetShaderInfoLog(vertexShaderHandle, logLength, &logLength, &compileLog[0]);
+	// Cara trasera
+	texturas.push_back(glm::vec2(0.0f, 1.0f));
+	texturas.push_back(glm::vec2(0.0f, 0.0f));
+	texturas.push_back(glm::vec2(1.0f, 0.0f));
+	texturas.push_back(glm::vec2(1.0f, 1.0f));
+	// Cara lateral izquerda
+	texturas.push_back(glm::vec2(0.0f, 1.0f));
+	texturas.push_back(glm::vec2(0.0f, 0.0f));
+	texturas.push_back(glm::vec2(1.0f, 0.0f));
+	texturas.push_back(glm::vec2(1.0f, 1.0f));
 
-			for (int i = 0; i < logLength; i++)
-			{
-				std::cout << compileLog[i];
-			}
-			std::cout << std::endl;
-		}
-		std::cout << "Shader Default.vert did not compiled" << std::endl;
-	}
+	// Cara arriba
+	texturas.push_back(glm::vec2(0.0f, 1.0f));
+	texturas.push_back(glm::vec2(0.0f, 0.0f));
+	texturas.push_back(glm::vec2(1.0f, 0.0f));
+	texturas.push_back(glm::vec2(1.0f, 1.0f));
+	// Cara abajo
+	texturas.push_back(glm::vec2(0.0f, 1.0f));
+	texturas.push_back(glm::vec2(0.0f, 0.0f));
+	texturas.push_back(glm::vec2(1.0f, 0.0f));
+	texturas.push_back(glm::vec2(1.0f, 1.0f));
 
-	//Leemos codigo fuente del fragment shadre con la clase auxiliar InputFile
-	ifile.Read("Default.frag");
-	std::string fragmentSource = ifile.GetContents();
-	//Hacemos un cast porque no le podemos mandar strings a OpenGL. Necesitamos mandarle const GLchar*
-	const GLchar *fragmentSource_c = (const GLchar*)fragmentSource.c_str();
-	//Creamos un shader de tipo fragmentShader y guardamos su id en la variable fragmentShaderHandle
-	GLuint fragmentShaderHandle = glCreateShader(GL_FRAGMENT_SHADER);
-	//Le mandamos el codigo fuente que leimos previamente a OpenGL
-	glShaderSource(fragmentShaderHandle, 1, &fragmentSource_c, nullptr);
-	//Le pedimos que compile
-	glCompileShader(fragmentShaderHandle);
 
-	//Creamos el manager de los shaders. Almacenamos el id en la variable shader´program
-	shaderProgram = glCreateProgram();
-	//este manager va a administrar el vertex shader con identificador vertexShaderHandle
-	glAttachShader(shaderProgram, vertexShaderHandle);
-	//este manager va a administrar el fragment shader con identificador fragmentShaderHandle
-	glAttachShader(shaderProgram, fragmentShaderHandle);
-	//Asociamos el inidice de buffer (VBO) de posiciones con el nombre de la variable correspondiente en el shader
-	glBindAttribLocation(shaderProgram, 0, "VertexPosition");
-	//Asciamos el indice del buffer (VBO) de colores con el nombre de la variable correspondiente con el shader
-	glBindAttribLocation(shaderProgram, 1, "VertexColor");
-	//Verificamos que las etapas de los shaders pueden trabajar en conjunto
-	glLinkProgram(shaderProgram);
+	//Vector de Posicion de la luz
+	lPosition=glm::vec3(25.0f, 25.0f, 25.0f);
 
+	//Vector de Color de la luz
+	lColor=glm::vec3(1.0f, 1.0f, 1.0f);
+
+	//Posicion de la camara
+	cPosition = _camera.GetPosition();
+
+
+
+	std::vector<unsigned int> indices = {0,1,2,0,2,3,4,5,6,4,6,7,8,9,10,8,10,11,12,13,14,12,14,15,16,17,18,16,18,19,20,21,22,20,22,23,24,25,26,24,26,27};
+
+	_mesh.CreateMesh(24);
+	_mesh.SetPositionAttribute(positions, GL_STATIC_DRAW, 0);
+	_mesh.SetColorAttribute(colors, GL_STATIC_DRAW, 1);
+	_mesh.SetNormalAttribute(normales, GL_STATIC_DRAW, 2);
+	_mesh.SetTexCoordAttribute(texturas, GL_STATIC_DRAW, 3);
+	_mesh.SetIndices(indices, GL_STATIC_DRAW);
+
+	_shaderProgram.CreateProgram();
+	_shaderProgram.AttachShader("PhongShading.vert", GL_VERTEX_SHADER);
+	_shaderProgram.AttachShader("PhongShading.frag", GL_FRAGMENT_SHADER);
+	_shaderProgram.SetAttribute(0, "VertexPosition");
+	_shaderProgram.SetAttribute(1, "VertexColor");
+	_shaderProgram.SetAttribute(2, "VertexNormal");
+	_shaderProgram.SetAttribute(3, "VertexTexCoord");
+	_shaderProgram.LinkProgram();
+
+
+	//POSICION DE TODOS LOS CUBOS
+	_transformPadre.SetPosition(0.0f, -15.0f, -50.0f);
+	_transformJoint1.SetPosition(-12.0f, 0.0f, 0.0f);
+	_transformHijo1.SetPosition(-12.0f, 0.0f, 0.0f);
+	_transformJoint2.SetPosition(12.0f, 0.0f, 0.0f);
+	_transformHijo2.SetPosition(12.0f, 0.0f, 0.0f);
+	_transformJoint3.SetPosition(0.0f, 0.0f, -12.0f);
+	_transformHijo3.SetPosition(0.0f, 0.0f, -12.0f);
+	_transformJoint4.SetPosition(0.0f, 0.0f, 12.0f);
+	_transformHijo4.SetPosition(0.0f, 0.0f, 12.0f);
+	_transformJointNieto.SetPosition(0.0f, 0.0f, -12.0f);
+	_transformNieto.SetPosition(0.0f, 0.0f, -12.0f);
+
+
+	myTexture.LoadTexture("metalbox.jpg");
 }
 
 void MainLoop()
@@ -135,20 +234,310 @@ void MainLoop()
 	// Borramos el buffer de color y profundidad siempre al inicio de un nuevo frame.
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	// Paso 1: Activar el programa shader (manager)
-	glUseProgram(shaderProgram);
-	// Paso 2: Activar un VAO
-	glBindVertexArray(vao);
-	// Paso 3: Dibujamos
-	glDrawArrays(GL_TRIANGLES, 0, 3);
-	// Paso 4: Desactivamos el VAO
-	glBindVertexArray(0);
-	// Paso 5  Desactivamos el programa shader (manager)
-	glUseProgram(0);
+	/////////////////////////////////////////////////////////////////////////////////CUBO PADRE
+	_transformPadre.Rotate(-0.01f, -0.01f, -0.01f, true);
+	_transformPadre.SetScale(0.5f, 0.5f, 0.5f);
+
+
+	_shaderProgram.Activate();
+	_shaderProgram.SetUniformMatrix("mvpMatrix", _camera.GetViewProjection() * _transformPadre.GetModelMatrix());
+	_shaderProgram.SetUniformMatrix("modelMatrix", _transformPadre.GetModelMatrix());
+	_shaderProgram.SetUniformf("LightColor", lColor);
+	_shaderProgram.SetUniformf("LightPosition", lPosition);
+	_shaderProgram.SetUniformf("CameraPosition", cPosition);
+	_shaderProgram.SetUniformi("DiffuseTexture", 0);
+	glActiveTexture(GL_TEXTURE0);
+	myTexture.Bind();
+	_mesh.Draw(GL_TRIANGLES);
+	glActiveTexture(GL_TEXTURE0);
+	myTexture.Unbind();
+	_mesh.Draw(GL_TRIANGLES);
+	_shaderProgram.Deactivate();
+
+	////////////////////////////////////////////////////////////////////////////7JOINT 1
+
+	angulozneg = angulozneg + delta;
+	if (angulozneg <= -90.0f)
+	{
+		delta = 0.01;
+
+	}
+	if (angulozneg>=0)
+	{
+		delta = -0.01;
+	}
+		_transformJoint1.SetRotation(0.0f, 0.0f, angulozneg);
+		_transformJoint1.SetScale(1.0f, 1.0f, 1.0f);
+
+		_shaderProgram.Activate();
+		_shaderProgram.SetUniformMatrix("mvpMatrix", _camera.GetViewProjection()  * _transformPadre.GetModelMatrix()*_transformJoint1.GetModelMatrix());
+		_shaderProgram.SetUniformMatrix("modelMatrix", _transformJoint1.GetModelMatrix());
+		//Poniendole luz BLANCA lColor y mandandola al Frag como LightColor 
+		_shaderProgram.SetUniformf("LightColor", lColor);
+		_shaderProgram.SetUniformf("LightPosition", lPosition);
+		_shaderProgram.SetUniformf("CameraPosition", cPosition);
+		_shaderProgram.SetUniformi("DiffuseTexture", 0);
+		glActiveTexture(GL_TEXTURE0);
+		myTexture.Bind();
+		//_mesh.Draw(GL_TRIANGLES);
+		glActiveTexture(GL_TEXTURE0);
+		myTexture.Unbind();
+		//_mesh.Draw(GL_TRIANGLES);
+		_shaderProgram.Deactivate();
+	
+	/////////////////////////////////////////////////////////////////////////////CUBO HIJO1
+	
+	//_transformHijo1.Rotate(0.0f, 0.0f, -0.01f, true);
+	_transformHijo1.SetScale(1.0f, 1.0f, 1.0f);
+
+
+	_shaderProgram.Activate();
+	_shaderProgram.SetUniformMatrix("mvpMatrix", _camera.GetViewProjection()  * _transformPadre.GetModelMatrix()*_transformJoint1.GetModelMatrix()*_transformHijo1.GetModelMatrix());
+	_shaderProgram.SetUniformMatrix("modelMatrix", _transformHijo1.GetModelMatrix());
+	//Poniendole luz BLANCA lColor y mandandola al Frag como LightColor 
+	_shaderProgram.SetUniformf("LightColor", lColor);
+	_shaderProgram.SetUniformf("LightPosition", lPosition);
+	_shaderProgram.SetUniformf("CameraPosition", cPosition);
+	_shaderProgram.SetUniformi("DiffuseTexture", 0);
+	glActiveTexture(GL_TEXTURE0);
+	myTexture.Bind();
+	_mesh.Draw(GL_TRIANGLES);
+	glActiveTexture(GL_TEXTURE0);
+	myTexture.Unbind();
+	_mesh.Draw(GL_TRIANGLES);
+	_shaderProgram.Deactivate();
+
+	////////////////////////////////////////////////////////////////////////////7JOINT 2
+
+	angulozpos = angulozpos - delta;
+	if (angulozpos >= 90.0f)
+	{
+		delta = -0.01f;
+	}
+	if (angulozpos <= 0)
+	{
+		delta = 0.01f;
+	}
+	_transformJoint2.SetRotation(0.0f, 0.0f, angulozpos);
+	_transformJoint2.SetScale(1.0f, 1.0f, 1.0f);
+
+
+	_shaderProgram.Activate();
+	_shaderProgram.SetUniformMatrix("mvpMatrix", _camera.GetViewProjection()  * _transformPadre.GetModelMatrix()*_transformJoint2.GetModelMatrix());
+	_shaderProgram.SetUniformMatrix("modelMatrix", _transformJoint2.GetModelMatrix());
+	//Poniendole luz BLANCA lColor y mandandola al Frag como LightColor 
+	_shaderProgram.SetUniformf("LightColor", lColor);
+	_shaderProgram.SetUniformf("LightPosition", lPosition);
+	_shaderProgram.SetUniformf("CameraPosition", cPosition);
+	_shaderProgram.SetUniformi("DiffuseTexture", 0);
+	glActiveTexture(GL_TEXTURE0);
+	myTexture.Bind();
+	//_mesh.Draw(GL_TRIANGLES);
+	glActiveTexture(GL_TEXTURE0);
+	myTexture.Unbind();
+	//_mesh.Draw(GL_TRIANGLES);
+	_shaderProgram.Deactivate();
+
+	/////////////////////////////////////////////////////////////////////////////CUBO HIJO2
+	//_transformHijo2.Rotate(0.0f, -0.01f, 0.0f, true);
+	_transformHijo2.SetScale(1.0f, 1.0f, 1.0f);
+
+
+	_shaderProgram.Activate();
+	_shaderProgram.SetUniformMatrix("mvpMatrix", _camera.GetViewProjection()  * _transformPadre.GetModelMatrix()*_transformJoint2.GetModelMatrix()*_transformHijo2.GetModelMatrix());
+	_shaderProgram.SetUniformMatrix("modelMatrix", _transformHijo2.GetModelMatrix());
+	//Poniendole luz BLANCA lColor y mandandola al Frag como LightColor 
+	_shaderProgram.SetUniformf("LightColor", lColor);
+	_shaderProgram.SetUniformf("LightPosition", lPosition);
+	_shaderProgram.SetUniformf("CameraPosition", cPosition);
+	_shaderProgram.SetUniformi("DiffuseTexture", 0);
+	glActiveTexture(GL_TEXTURE0);
+	myTexture.Bind();
+	_mesh.Draw(GL_TRIANGLES);
+	glActiveTexture(GL_TEXTURE0);
+	myTexture.Unbind();
+	_mesh.Draw(GL_TRIANGLES);
+	_shaderProgram.Deactivate();
+
+	////////////////////////////////////////////////////////////////////////////7JOINT 3
+
+	//anguloxpos = anguloxpos + 0.01f;
+	anguloxpos = anguloxpos - delta;
+	if (angulozpos >= 90.0f)
+	{
+		delta = -0.01f;
+	}
+	if (angulozpos <= 0)
+	{
+		delta = 0.01f;
+	}
+	_transformJoint3.SetRotation(anguloxpos, 0.0f, 0.0f);
+	_transformJoint3.SetScale(1.0f, 1.0f, 1.0f);
+
+
+	_shaderProgram.Activate();
+	_shaderProgram.SetUniformMatrix("mvpMatrix", _camera.GetViewProjection()  * _transformPadre.GetModelMatrix()*_transformJoint3.GetModelMatrix());
+	_shaderProgram.SetUniformMatrix("modelMatrix", _transformJoint3.GetModelMatrix());
+	//Poniendole luz BLANCA lColor y mandandola al Frag como LightColor 
+	_shaderProgram.SetUniformf("LightColor", lColor);
+	_shaderProgram.SetUniformf("LightPosition", lPosition);
+	_shaderProgram.SetUniformf("CameraPosition", cPosition);
+	_shaderProgram.SetUniformi("DiffuseTexture", 0);
+	glActiveTexture(GL_TEXTURE0);
+	myTexture.Bind();
+	//_mesh.Draw(GL_TRIANGLES);
+	glActiveTexture(GL_TEXTURE0);
+	myTexture.Unbind();
+	//_mesh.Draw(GL_TRIANGLES);
+	_shaderProgram.Deactivate();
+
+	/////////////////////////////////////////////////////////////////////////////CUBO HIJO3
+	//_transformHijo3.Rotate(0.0f, -0.01f, 0.0f, true);
+	_transformHijo3.SetScale(1.0f, 1.0f, 1.0f);
+
+
+	_shaderProgram.Activate();
+	_shaderProgram.SetUniformMatrix("mvpMatrix", _camera.GetViewProjection()  * _transformPadre.GetModelMatrix()*_transformJoint3.GetModelMatrix()*_transformHijo3.GetModelMatrix());
+	_shaderProgram.SetUniformMatrix("modelMatrix", _transformHijo3.GetModelMatrix());
+	//Poniendole luz BLANCA lColor y mandandola al Frag como LightColor 
+	_shaderProgram.SetUniformf("LightColor", lColor);
+	_shaderProgram.SetUniformf("LightPosition", lPosition);
+	_shaderProgram.SetUniformf("CameraPosition", cPosition);
+	_shaderProgram.SetUniformi("DiffuseTexture", 0);
+	glActiveTexture(GL_TEXTURE0);
+	myTexture.Bind();
+	_mesh.Draw(GL_TRIANGLES);
+	glActiveTexture(GL_TEXTURE0);
+	myTexture.Unbind();
+	_mesh.Draw(GL_TRIANGLES);
+	_shaderProgram.Deactivate();
+
+	////////////////////////////////////////////////////////////////////////////7JOINT 4
+
+	//anguloxneg = anguloxneg - 0.01f;
+	anguloxneg = anguloxneg + delta;
+	if (angulozneg <= -90.0f)
+	{
+		delta = 0.01;
+
+	}
+	if (angulozneg >= 0)
+	{
+		delta = -0.01;
+	}
+	_transformJoint4.SetRotation(anguloxneg, 0.0f, 0.0f);
+	_transformJoint4.SetScale(1.0f, 1.0f, 1.0f);
+
+
+	_shaderProgram.Activate();
+	_shaderProgram.SetUniformMatrix("mvpMatrix", _camera.GetViewProjection()  * _transformPadre.GetModelMatrix()*_transformJoint4.GetModelMatrix());
+	_shaderProgram.SetUniformMatrix("modelMatrix", _transformJoint4.GetModelMatrix());
+	//Poniendole luz BLANCA lColor y mandandola al Frag como LightColor 
+	_shaderProgram.SetUniformf("LightColor", lColor);
+	_shaderProgram.SetUniformf("LightPosition", lPosition);
+	_shaderProgram.SetUniformf("CameraPosition", cPosition);
+	_shaderProgram.SetUniformi("DiffuseTexture", 0);
+	glActiveTexture(GL_TEXTURE0);
+	myTexture.Bind();
+	//_mesh.Draw(GL_TRIANGLES);
+	glActiveTexture(GL_TEXTURE0);
+	myTexture.Unbind();
+	//_mesh.Draw(GL_TRIANGLES);
+	_shaderProgram.Deactivate();
+
+	/////////////////////////////////////////////////////////////////////////////CUBO HIJO4
+	//_transformHijo4.Rotate(0.0f, -0.01f, 0.0f, true);
+	_transformHijo4.SetScale(1.0f, 1.0f, 1.0f);
+
+
+	_shaderProgram.Activate();
+	_shaderProgram.SetUniformMatrix("mvpMatrix", _camera.GetViewProjection()  * _transformPadre.GetModelMatrix()*_transformJoint4.GetModelMatrix()*_transformHijo4.GetModelMatrix());
+	_shaderProgram.SetUniformMatrix("modelMatrix", _transformHijo1.GetModelMatrix());
+	//Poniendole luz BLANCA lColor y mandandola al Frag como LightColor 
+	_shaderProgram.SetUniformf("LightColor", lColor);
+	_shaderProgram.SetUniformf("LightPosition", lPosition);
+	_shaderProgram.SetUniformf("CameraPosition", cPosition);
+	_shaderProgram.SetUniformi("DiffuseTexture", 0);
+	glActiveTexture(GL_TEXTURE0);
+	myTexture.Bind();
+	_mesh.Draw(GL_TRIANGLES);
+	glActiveTexture(GL_TEXTURE0);
+	myTexture.Unbind();
+	_mesh.Draw(GL_TRIANGLES);
+	_shaderProgram.Deactivate();
+
+	////////////////////////////////////////////////////////////////////////////7JOINT Nieto
+
+	//anguloxposnieto = anguloxposnieto + 0.01f;
+	anguloxposnieto = anguloxposnieto - delta;
+	if (angulozpos >= 90.0f)
+	{
+		delta = -0.01f;
+	}
+	if (angulozpos <= 0)
+	{
+		delta = 0.01f;
+	}
+	_transformJointNieto.SetRotation(anguloxpos, 0.0f, 0.0f);
+	_transformJointNieto.SetScale(1.0f, 1.0f, 1.0f);
+
+
+	_shaderProgram.Activate();
+	_shaderProgram.SetUniformMatrix("mvpMatrix", _camera.GetViewProjection()  * _transformPadre.GetModelMatrix()*_transformJoint3.GetModelMatrix()*_transformHijo3.GetModelMatrix()*_transformJointNieto.GetModelMatrix());
+	_shaderProgram.SetUniformMatrix("modelMatrix", _transformJointNieto.GetModelMatrix());
+	//Poniendole luz BLANCA lColor y mandandola al Frag como LightColor 
+	_shaderProgram.SetUniformf("LightColor", lColor);
+	_shaderProgram.SetUniformf("LightPosition", lPosition);
+	_shaderProgram.SetUniformf("CameraPosition", cPosition);
+	_shaderProgram.SetUniformi("DiffuseTexture", 0);
+	glActiveTexture(GL_TEXTURE0);
+	myTexture.Bind();
+	//_mesh.Draw(GL_TRIANGLES);
+	glActiveTexture(GL_TEXTURE0);
+	myTexture.Unbind();
+	//_mesh.Draw(GL_TRIANGLES);
+	_shaderProgram.Deactivate();
+
+	/////////////////////////////////////////////////////////////////////////////CUBO Nieto
+	//_transformNieto.Rotate(0.0f, -0.01f, 0.0f, true);
+	_transformNieto.SetScale(1.0f, 1.0f, 1.0f);
+
+
+	_shaderProgram.Activate();
+	_shaderProgram.SetUniformMatrix("mvpMatrix", _camera.GetViewProjection()  * _transformPadre.GetModelMatrix()*_transformJoint3.GetModelMatrix()*_transformHijo3.GetModelMatrix()*_transformJointNieto.GetModelMatrix()*_transformNieto.GetModelMatrix());
+	_shaderProgram.SetUniformMatrix("modelMatrix", _transformNieto.GetModelMatrix());
+	//Poniendole luz BLANCA lColor y mandandola al Frag como LightColor 
+	_shaderProgram.SetUniformf("LightColor", lColor);
+	_shaderProgram.SetUniformf("LightPosition", lPosition);
+	_shaderProgram.SetUniformf("CameraPosition", cPosition);
+	_shaderProgram.SetUniformi("DiffuseTexture", 0);
+	glActiveTexture(GL_TEXTURE0);
+	myTexture.Bind();
+	_mesh.Draw(GL_TRIANGLES);
+	glActiveTexture(GL_TEXTURE0);
+	myTexture.Unbind();
+	_mesh.Draw(GL_TRIANGLES);
+	_shaderProgram.Deactivate();
+
 
 	// Intercambiar los buffers (el que se estaba rendereando con el que se estaba
 	// mostrando).
 	glutSwapBuffers();
+}
+
+void Idle()
+{
+	// Cuando OpenGL entra en modo de reposo 
+	// (para guardar bateria, por ejemplo)
+	// le decimos que vuelva a dibujar ->
+	// Vuelve a mandar a llamar GameLoop
+	glutPostRedisplay();
+}
+
+void ReshapeWindow(int width, int height)//AQUI ACTUALIZAMOS LA RESOLUCION Y TAMAÑO DEL VIEWPORT
+{
+	glViewport(0, 0, width, height);
+	_camera.SetPerspective(1.0f, 1000.0f, 60.0f,(float)width/(float)height);
 }
 
 int main(int argc, char* argv[])
@@ -175,6 +564,20 @@ int main(int argc, char* argv[])
 	// Asociar una función de render. Esta función se mandará a llamar para 
 	// dibujar un frame.
 	glutDisplayFunc(MainLoop);
+	// Asociamos una función para el cambio de resolución
+	// de la ventana. Freeglut la va a mandar a llamar
+	// cuando alguien cambie el tamaño de la venta.
+	glutReshapeFunc(ReshapeWindow);
+	// Asociamos la función que se mandará a llamar
+	// cuando OpenGL entre en modo de reposo.
+	glutIdleFunc(Idle);
+
+	//Iniciamos DEVIL
+	ilInit();
+	//Cambiamos el punto de origen de las texturas
+	ilEnable(IL_ORIGIN_SET);
+	//Ponemos el punto de origen en la esquina inferior izquierda
+	ilOriginFunc(IL_ORIGIN_LOWER_LEFT);
 
 	// Inicializamos GLEW. Esta librería se encarga de obtener el API
 	// de OpenGL de nuestra tarjeta de video. SHAME ON YOU MICROSOFT.
@@ -183,6 +586,14 @@ int main(int argc, char* argv[])
 	// COnfigurar OpenGL. Este es el color por default del buffer de color
 	// en el framebuffer.
 	glClearColor(1.0f, 1.0f, 0.5f, 1.0f);
+	// Ademas de solicitar el buffer de profundidad, tenemos
+	// que decirle a OpenGL que lo queremos activo
+	glEnable(GL_DEPTH_TEST);
+	// Activamos el borrado de caras traseras.
+	// Ahora todos los triangulos que dibujemos deben estar en CCW
+	glEnable(GL_CULL_FACE);
+	// No dibujar las caras traseras de las geometrías.
+	glCullFace(GL_BACK);
 
 	std::cout << glGetString(GL_VERSION) << std::endl;
 
@@ -193,53 +604,5 @@ int main(int argc, char* argv[])
 	// hasta que se cierre la ventana de OpenGL.
 	glutMainLoop();
 
-	return 0;
-}*/
-
-
-#include <iomanip>
-#include "Transform.h"
-
-Transform rotation;
-Transform translation;
-Transform scale;
-Transform combined;
-
-void PrintTransform(Transform& t)
-{
-
-	glm::mat4 modelMatrix = t.GetModelMatrix();
-	for (size_t i=0; i<modelMatrix.length(); i++)
-	{
-		for (size_t j=0; j<modelMatrix.length(); j++)
-		{
-			std::cout << std::setw(10) << std::left << modelMatrix[j][i] << "";
-		}
-		std::cout << std::endl;
-	}
-	std::cout << std::endl;
-}
-
-void Initialize()
-{
-	rotation.SetRotation(45,90,30);
-	PrintTransform(rotation);
-
-	translation.SetPosition(3, 5, -7);
-	PrintTransform(translation);
-
-	scale.SetScale(2, 3, 4);
-	PrintTransform(scale);
-
-	combined.SetRotation(45, 90, 30);
-	combined.SetPosition(3, 5, -7);
-	combined.SetScale(2, 3, 4);
-	PrintTransform(combined);
-
-}
-int main(int argc, char* argv[])
-{
-	Initialize();
-	std::cin.get();
 	return 0;
 }

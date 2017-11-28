@@ -1,20 +1,17 @@
 #include "Mesh.h"
-#include "InputFile.h"
-#include <fstream>
 #include <iostream>
-#include <sstream>
-#include <iostream>
-#include <GL/glew.h>
-#include <GL/freeglut.h>
-#include <glm/glm.hpp>
-#include <vector>
+#include <IL/il.h>
 
 Mesh::Mesh()
 {
-	 _vertexArrayObject = 0;
-	 _positionsVertexBufferObject = 0;
-	_colorsVertexBufferObject = 0;
 	_vertexCount = 0;
+	_indicesCount = 0;
+	_vertexArrayObject = 0;
+	_positionsVertexBufferObject = 0;
+	_colorsVertexBufferObject = 0;
+	_normalsVertexBufferObject = 0;
+	_texCoordsVertexBufferObject = 0;
+	_indicesBufferObject = 0;
 }
 
 Mesh::~Mesh()
@@ -22,52 +19,100 @@ Mesh::~Mesh()
 	glDeleteVertexArrays(1, &_vertexArrayObject);
 	glDeleteBuffers(1, &_positionsVertexBufferObject);
 	glDeleteBuffers(1, &_colorsVertexBufferObject);
+	glDeleteBuffers(1, &_normalsVertexBufferObject);
+	glDeleteBuffers(1, &_texCoordsVertexBufferObject);
+	glDeleteBuffers(1, &_indicesBufferObject);
 	_vertexCount = 0;
+	_indicesCount = 0;
 }
 
 void Mesh::CreateMesh(GLint vertexCount)
 {
-	_vertexCount = vertexCount;
 	glGenVertexArrays(1, &_vertexArrayObject);
+	_vertexCount = vertexCount;
 }
 
 void Mesh::Draw(GLenum primitive)
 {
 	glBindVertexArray(_vertexArrayObject);
-	glDrawArrays(GL_TRIANGLES, 0, 3);
+
+	if (_indicesCount)
+		glDrawElements(primitive, _indicesCount, GL_UNSIGNED_INT, nullptr);
+	else
+		glDrawArrays(primitive, 0, _vertexCount);
+
 	glBindVertexArray(0);
 }
 
 void Mesh::SetPositionAttribute(std::vector<glm::vec2> positions, GLenum usage, GLuint locationIndex)
 {
-	if (positions.size == _vertexCount && positions.size > 0)
-		SetAtttributeData(_positionsVertexBufferObject, positions.size * sizeof(glm::vec2), positions.data, usage, locationIndex, 2);
+	if (positions.size() > 0 && positions.size() == _vertexCount)
+		SetAttributeData(_positionsVertexBufferObject, sizeof(glm::vec2) * positions.size(), positions.data(), usage, locationIndex, 2);
+}
+
+void Mesh::SetPositionAttribute(std::vector<glm::vec3> positions, GLenum usage, GLuint locationIndex)
+{
+	if (positions.size() > 0 && positions.size() == _vertexCount)
+		SetAttributeData(_positionsVertexBufferObject, sizeof(glm::vec3) * positions.size(), positions.data(), usage, locationIndex, 3);
 }
 
 void Mesh::SetColorAttribute(std::vector<glm::vec3> colors, GLenum usage, GLuint locationIndex)
 {
-	if (colors.size == _vertexCount && colors.size > 0)
-		SetAtttributeData(_positionsVertexBufferObject, colors.size * sizeof(glm::vec3), colors.data, usage, locationIndex, 2);
+	if (colors.size() > 0 && colors.size() == _vertexCount)
+		SetAttributeData(_colorsVertexBufferObject, sizeof(glm::vec3) * colors.size(), colors.data(), usage, locationIndex, 3);
 }
 
-void Mesh::SetAtttributeData(GLuint & buffer, const GLsizeiptr size, const void * data, GLenum usage, GLuint locationIndex, const GLint components)
+void Mesh::SetColorAttribute(std::vector<glm::vec4> colors, GLenum usage, GLuint locationIndex)
+{
+	if (colors.size() > 0 && colors.size() == _vertexCount)
+		SetAttributeData(_colorsVertexBufferObject, sizeof(glm::vec4) * colors.size(), colors.data(), usage, locationIndex, 4);
+}
+
+void Mesh::SetNormalAttribute(std::vector<glm::vec3> normals, GLenum usage, GLuint locationIndex)
+{
+	if (normals.size() > 0 && normals.size() == _vertexCount)
+		SetAttributeData(_normalsVertexBufferObject, sizeof(glm::vec3) * normals.size(), normals.data(), usage, locationIndex, 3);
+}
+
+void Mesh::SetTexCoordAttribute(std::vector<glm::vec2> texCoords, GLenum usage, GLuint locationIndex)
+{
+	if (texCoords.size() > 0 && texCoords.size() == _vertexCount)
+		SetAttributeData(_texCoordsVertexBufferObject, sizeof(glm::vec2) * texCoords.size(), texCoords.data(), usage, locationIndex, 2);
+}
+
+void Mesh::SetAttributeData(GLuint& buffer, const GLsizeiptr size, const void* data, GLenum usage, GLuint locationIndex, const GLint components)
 {
 
-	if (buffer != 0)
-	{
-		glDeleteBuffers(1,&buffer);
-	}
+	if (buffer)
+		glDeleteBuffers(1, &buffer);
+
 	glBindVertexArray(_vertexArrayObject);
+
 	glGenBuffers(1, &buffer);
-	// Le decimos a OpenGL que lo queremos utilizar como un atributo.
 	glBindBuffer(GL_ARRAY_BUFFER, buffer);
-	// Asignamos los datos al buffer y los mandamos a la tarjeta de video.
-	glBufferData(GL_ARRAY_BUFFER, size,data,usage);
-	// Quiero activar el atributo con indice 0 en la tarjeta de video
+	glBufferData(GL_ARRAY_BUFFER, size, data, usage);
 	glEnableVertexAttribArray(locationIndex);
-	// Configuramos el atributo con indice 0 en la tarjeta de video.
-	glVertexAttribPointer(locationIndex,components, GL_FLOAT, GL_FALSE, 0, nullptr);
-	// Desactivamos el uso del VBO de posiciones
+	glVertexAttribPointer(locationIndex, components, GL_FLOAT, GL_FALSE, 0, nullptr);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
+	glBindVertexArray(0);
+}
+
+void Mesh::SetIndices(std::vector<unsigned int> indices, GLenum usage)
+{
+	if (indices.size() <= 0)
+		return;
+
+	_indicesCount = indices.size();
+
+	if (_indicesBufferObject)
+		glDeleteBuffers(1, &_indicesBufferObject);
+
+	glBindVertexArray(_vertexArrayObject);
+
+	glGenBuffers(1, &_indicesBufferObject);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _indicesBufferObject);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * indices.size(), indices.data(), usage);
+
+	glBindVertexArray(0);
 }
