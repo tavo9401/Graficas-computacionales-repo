@@ -24,12 +24,14 @@ Transform _transformJoint2;
 Transform _transformJoint3;
 Transform _transformJoint4;
 Transform _transformJointNieto;
+Transform _transformSuelo;
+
 ShaderProgram _shaderProgram;
 Texture2D myTexture;
+Texture2D myTexture2;
 glm::vec3 lPosition;
 glm::vec3 lColor;
 glm::vec3 cPosition;
-glm::vec2 tPosition;
 float angulozneg = 0;
 float angulozpos = 0;
 float anguloxneg = 0;
@@ -183,7 +185,7 @@ void Initialize()
 
 
 	//Vector de Posicion de la luz
-	lPosition=glm::vec3(25.0f, 25.0f, 25.0f);
+	lPosition=glm::vec3(25.0f, 50.0f, 25.0f);
 
 	//Vector de Color de la luz
 	lColor=glm::vec3(1.0f, 1.0f, 1.0f);
@@ -213,7 +215,7 @@ void Initialize()
 
 
 	//POSICION DE TODOS LOS CUBOS
-	_transformPadre.SetPosition(0.0f, -15.0f, -50.0f);
+	_transformPadre.SetPosition(0.0f, -8.0f, -50.0f);
 	_transformJoint1.SetPosition(-12.0f, 0.0f, 0.0f);
 	_transformHijo1.SetPosition(-12.0f, 0.0f, 0.0f);
 	_transformJoint2.SetPosition(12.0f, 0.0f, 0.0f);
@@ -224,9 +226,12 @@ void Initialize()
 	_transformHijo4.SetPosition(0.0f, 0.0f, 12.0f);
 	_transformJointNieto.SetPosition(0.0f, 0.0f, -12.0f);
 	_transformNieto.SetPosition(0.0f, 0.0f, -12.0f);
+	_transformSuelo.SetPosition(0.0f, -10.0f, 0.0f);
 
 
 	myTexture.LoadTexture("metalbox.jpg");
+	myTexture2.LoadTexture("Fox.png");
+
 }
 
 void MainLoop()
@@ -234,8 +239,31 @@ void MainLoop()
 	// Borramos el buffer de color y profundidad siempre al inicio de un nuevo frame.
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+	/////////////////////////////////////////////////////////////////////////////////CUBO SUELO
+	//_transformPadre.Rotate(0.0f, -0.01f, 0.0f, true);
+	_transformSuelo.SetScale(10.0f, 0.5f, 10.0f);
+
+
+	_shaderProgram.Activate();
+	_shaderProgram.SetUniformMatrix("mvpMatrix", _camera.GetViewProjection() * _transformSuelo.GetModelMatrix());
+	_shaderProgram.SetUniformMatrix("modelMatrix", _transformSuelo.GetModelMatrix());
+	_shaderProgram.SetUniformf("LightColor", lColor);
+	_shaderProgram.SetUniformf("LightPosition", lPosition);
+	_shaderProgram.SetUniformf("CameraPosition", cPosition);
+	_shaderProgram.SetUniformi("DiffuseTexture", 0);
+	glActiveTexture(GL_TEXTURE0);
+	myTexture.Bind();
+	
+	_mesh.Draw(GL_TRIANGLES);
+	glActiveTexture(GL_TEXTURE0);
+	myTexture.Unbind();
+	
+	_shaderProgram.Deactivate();
+
+
+
 	/////////////////////////////////////////////////////////////////////////////////CUBO PADRE
-	_transformPadre.Rotate(-0.01f, -0.01f, -0.01f, true);
+	_transformPadre.Rotate(0.0f, -0.01f, 0.0f, true);
 	_transformPadre.SetScale(0.5f, 0.5f, 0.5f);
 
 
@@ -248,10 +276,14 @@ void MainLoop()
 	_shaderProgram.SetUniformi("DiffuseTexture", 0);
 	glActiveTexture(GL_TEXTURE0);
 	myTexture.Bind();
+	_shaderProgram.SetUniformi("MixTexture", 1);
+	glActiveTexture(GL_TEXTURE1);
+	myTexture2.Bind();
 	_mesh.Draw(GL_TRIANGLES);
 	glActiveTexture(GL_TEXTURE0);
 	myTexture.Unbind();
-	_mesh.Draw(GL_TRIANGLES);
+	glActiveTexture(GL_TEXTURE1);
+	myTexture2.Unbind();
 	_shaderProgram.Deactivate();
 
 	////////////////////////////////////////////////////////////////////////////7JOINT 1
@@ -279,10 +311,8 @@ void MainLoop()
 		_shaderProgram.SetUniformi("DiffuseTexture", 0);
 		glActiveTexture(GL_TEXTURE0);
 		myTexture.Bind();
-		//_mesh.Draw(GL_TRIANGLES);
 		glActiveTexture(GL_TEXTURE0);
 		myTexture.Unbind();
-		//_mesh.Draw(GL_TRIANGLES);
 		_shaderProgram.Deactivate();
 	
 	/////////////////////////////////////////////////////////////////////////////CUBO HIJO1
@@ -293,7 +323,7 @@ void MainLoop()
 
 	_shaderProgram.Activate();
 	_shaderProgram.SetUniformMatrix("mvpMatrix", _camera.GetViewProjection()  * _transformPadre.GetModelMatrix()*_transformJoint1.GetModelMatrix()*_transformHijo1.GetModelMatrix());
-	_shaderProgram.SetUniformMatrix("modelMatrix", _transformHijo1.GetModelMatrix());
+	_shaderProgram.SetUniformMatrix("modelMatrix", _transformPadre.GetModelMatrix()*_transformJoint1.GetModelMatrix()*_transformHijo1.GetModelMatrix());
 	//Poniendole luz BLANCA lColor y mandandola al Frag como LightColor 
 	_shaderProgram.SetUniformf("LightColor", lColor);
 	_shaderProgram.SetUniformf("LightPosition", lPosition);
@@ -301,10 +331,14 @@ void MainLoop()
 	_shaderProgram.SetUniformi("DiffuseTexture", 0);
 	glActiveTexture(GL_TEXTURE0);
 	myTexture.Bind();
+	_shaderProgram.SetUniformi("MixTexture", 1);
+	glActiveTexture(GL_TEXTURE1);
+	myTexture2.Bind();
 	_mesh.Draw(GL_TRIANGLES);
 	glActiveTexture(GL_TEXTURE0);
 	myTexture.Unbind();
-	_mesh.Draw(GL_TRIANGLES);
+	glActiveTexture(GL_TEXTURE1);
+	myTexture2.Unbind();
 	_shaderProgram.Deactivate();
 
 	////////////////////////////////////////////////////////////////////////////7JOINT 2
@@ -332,10 +366,8 @@ void MainLoop()
 	_shaderProgram.SetUniformi("DiffuseTexture", 0);
 	glActiveTexture(GL_TEXTURE0);
 	myTexture.Bind();
-	//_mesh.Draw(GL_TRIANGLES);
 	glActiveTexture(GL_TEXTURE0);
 	myTexture.Unbind();
-	//_mesh.Draw(GL_TRIANGLES);
 	_shaderProgram.Deactivate();
 
 	/////////////////////////////////////////////////////////////////////////////CUBO HIJO2
@@ -345,7 +377,7 @@ void MainLoop()
 
 	_shaderProgram.Activate();
 	_shaderProgram.SetUniformMatrix("mvpMatrix", _camera.GetViewProjection()  * _transformPadre.GetModelMatrix()*_transformJoint2.GetModelMatrix()*_transformHijo2.GetModelMatrix());
-	_shaderProgram.SetUniformMatrix("modelMatrix", _transformHijo2.GetModelMatrix());
+	_shaderProgram.SetUniformMatrix("modelMatrix", _transformPadre.GetModelMatrix()*_transformJoint2.GetModelMatrix()* _transformHijo2.GetModelMatrix());
 	//Poniendole luz BLANCA lColor y mandandola al Frag como LightColor 
 	_shaderProgram.SetUniformf("LightColor", lColor);
 	_shaderProgram.SetUniformf("LightPosition", lPosition);
@@ -353,10 +385,14 @@ void MainLoop()
 	_shaderProgram.SetUniformi("DiffuseTexture", 0);
 	glActiveTexture(GL_TEXTURE0);
 	myTexture.Bind();
+	_shaderProgram.SetUniformi("MixTexture", 1);
+	glActiveTexture(GL_TEXTURE1);
+	myTexture2.Bind();
 	_mesh.Draw(GL_TRIANGLES);
 	glActiveTexture(GL_TEXTURE0);
 	myTexture.Unbind();
-	_mesh.Draw(GL_TRIANGLES);
+	glActiveTexture(GL_TEXTURE1);
+	myTexture2.Unbind();
 	_shaderProgram.Deactivate();
 
 	////////////////////////////////////////////////////////////////////////////7JOINT 3
@@ -385,10 +421,8 @@ void MainLoop()
 	_shaderProgram.SetUniformi("DiffuseTexture", 0);
 	glActiveTexture(GL_TEXTURE0);
 	myTexture.Bind();
-	//_mesh.Draw(GL_TRIANGLES);
 	glActiveTexture(GL_TEXTURE0);
 	myTexture.Unbind();
-	//_mesh.Draw(GL_TRIANGLES);
 	_shaderProgram.Deactivate();
 
 	/////////////////////////////////////////////////////////////////////////////CUBO HIJO3
@@ -398,7 +432,7 @@ void MainLoop()
 
 	_shaderProgram.Activate();
 	_shaderProgram.SetUniformMatrix("mvpMatrix", _camera.GetViewProjection()  * _transformPadre.GetModelMatrix()*_transformJoint3.GetModelMatrix()*_transformHijo3.GetModelMatrix());
-	_shaderProgram.SetUniformMatrix("modelMatrix", _transformHijo3.GetModelMatrix());
+	_shaderProgram.SetUniformMatrix("modelMatrix", _transformPadre.GetModelMatrix()*_transformJoint3.GetModelMatrix()*_transformHijo3.GetModelMatrix());
 	//Poniendole luz BLANCA lColor y mandandola al Frag como LightColor 
 	_shaderProgram.SetUniformf("LightColor", lColor);
 	_shaderProgram.SetUniformf("LightPosition", lPosition);
@@ -406,10 +440,14 @@ void MainLoop()
 	_shaderProgram.SetUniformi("DiffuseTexture", 0);
 	glActiveTexture(GL_TEXTURE0);
 	myTexture.Bind();
+	_shaderProgram.SetUniformi("MixTexture", 1);
+	glActiveTexture(GL_TEXTURE1);
+	myTexture2.Bind();
 	_mesh.Draw(GL_TRIANGLES);
 	glActiveTexture(GL_TEXTURE0);
 	myTexture.Unbind();
-	_mesh.Draw(GL_TRIANGLES);
+	glActiveTexture(GL_TEXTURE1);
+	myTexture2.Unbind();
 	_shaderProgram.Deactivate();
 
 	////////////////////////////////////////////////////////////////////////////7JOINT 4
@@ -439,10 +477,8 @@ void MainLoop()
 	_shaderProgram.SetUniformi("DiffuseTexture", 0);
 	glActiveTexture(GL_TEXTURE0);
 	myTexture.Bind();
-	//_mesh.Draw(GL_TRIANGLES);
 	glActiveTexture(GL_TEXTURE0);
 	myTexture.Unbind();
-	//_mesh.Draw(GL_TRIANGLES);
 	_shaderProgram.Deactivate();
 
 	/////////////////////////////////////////////////////////////////////////////CUBO HIJO4
@@ -452,7 +488,7 @@ void MainLoop()
 
 	_shaderProgram.Activate();
 	_shaderProgram.SetUniformMatrix("mvpMatrix", _camera.GetViewProjection()  * _transformPadre.GetModelMatrix()*_transformJoint4.GetModelMatrix()*_transformHijo4.GetModelMatrix());
-	_shaderProgram.SetUniformMatrix("modelMatrix", _transformHijo1.GetModelMatrix());
+	_shaderProgram.SetUniformMatrix("modelMatrix", _transformPadre.GetModelMatrix()*_transformJoint4.GetModelMatrix()*_transformHijo1.GetModelMatrix());
 	//Poniendole luz BLANCA lColor y mandandola al Frag como LightColor 
 	_shaderProgram.SetUniformf("LightColor", lColor);
 	_shaderProgram.SetUniformf("LightPosition", lPosition);
@@ -460,10 +496,14 @@ void MainLoop()
 	_shaderProgram.SetUniformi("DiffuseTexture", 0);
 	glActiveTexture(GL_TEXTURE0);
 	myTexture.Bind();
+	_shaderProgram.SetUniformi("MixTexture", 1);
+	glActiveTexture(GL_TEXTURE1);
+	myTexture2.Bind();
 	_mesh.Draw(GL_TRIANGLES);
 	glActiveTexture(GL_TEXTURE0);
 	myTexture.Unbind();
-	_mesh.Draw(GL_TRIANGLES);
+	glActiveTexture(GL_TEXTURE1);
+	myTexture2.Unbind();
 	_shaderProgram.Deactivate();
 
 	////////////////////////////////////////////////////////////////////////////7JOINT Nieto
@@ -492,20 +532,17 @@ void MainLoop()
 	_shaderProgram.SetUniformi("DiffuseTexture", 0);
 	glActiveTexture(GL_TEXTURE0);
 	myTexture.Bind();
-	//_mesh.Draw(GL_TRIANGLES);
 	glActiveTexture(GL_TEXTURE0);
 	myTexture.Unbind();
-	//_mesh.Draw(GL_TRIANGLES);
 	_shaderProgram.Deactivate();
 
 	/////////////////////////////////////////////////////////////////////////////CUBO Nieto
-	//_transformNieto.Rotate(0.0f, -0.01f, 0.0f, true);
 	_transformNieto.SetScale(1.0f, 1.0f, 1.0f);
 
 
 	_shaderProgram.Activate();
 	_shaderProgram.SetUniformMatrix("mvpMatrix", _camera.GetViewProjection()  * _transformPadre.GetModelMatrix()*_transformJoint3.GetModelMatrix()*_transformHijo3.GetModelMatrix()*_transformJointNieto.GetModelMatrix()*_transformNieto.GetModelMatrix());
-	_shaderProgram.SetUniformMatrix("modelMatrix", _transformNieto.GetModelMatrix());
+	_shaderProgram.SetUniformMatrix("modelMatrix", _transformPadre.GetModelMatrix()*_transformJoint3.GetModelMatrix()*_transformHijo3.GetModelMatrix()*_transformJointNieto.GetModelMatrix()*_transformNieto.GetModelMatrix());
 	//Poniendole luz BLANCA lColor y mandandola al Frag como LightColor 
 	_shaderProgram.SetUniformf("LightColor", lColor);
 	_shaderProgram.SetUniformf("LightPosition", lPosition);
@@ -513,10 +550,14 @@ void MainLoop()
 	_shaderProgram.SetUniformi("DiffuseTexture", 0);
 	glActiveTexture(GL_TEXTURE0);
 	myTexture.Bind();
+	_shaderProgram.SetUniformi("MixTexture", 1);
+	glActiveTexture(GL_TEXTURE1);
+	myTexture2.Bind();
 	_mesh.Draw(GL_TRIANGLES);
 	glActiveTexture(GL_TEXTURE0);
 	myTexture.Unbind();
-	_mesh.Draw(GL_TRIANGLES);
+	glActiveTexture(GL_TEXTURE1);
+	myTexture2.Unbind();
 	_shaderProgram.Deactivate();
 
 

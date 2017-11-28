@@ -11,6 +11,8 @@ uniform vec3 LightColor;
 uniform vec3 LightPosition;
 uniform vec3 CameraPosition;
 uniform sampler2D DiffuseTexture;
+uniform sampler2D MixTexture;
+
 
 void main()
 {	
@@ -25,17 +27,23 @@ void main()
 	vec3 diffuse = angleDiffuse * LightColor;
 
 
-	vec3 VecR = reflect(-VecL, InterpolatedNormal);
+	vec3 VecR = normalize(reflect(-VecL, InterpolatedNormal));
 	vec3 VecV = normalize(CameraPosition - PixelPosition);
 	float angleSpec = dot(VecR, VecV); 
 	if (angleSpec < 0)
 	{
 		angleSpec = 0;
 	}
-	vec3 specular = 0.01 * pow(dot(VecV, VecR), 8)* LightColor;
+	vec3 specular = 0.01 * pow(dot(VecV, VecR), 32)* LightColor;
 
 
 	vec3 phong= (ambient + diffuse + specular);
 
-	FragColor = vec4(phong, 1.0f)*texture2D( DiffuseTexture,InterpolatedTexCoord);
+	vec4 Base1=texture( DiffuseTexture,InterpolatedTexCoord);
+	vec4 Base2=texture( MixTexture,InterpolatedTexCoord);
+	vec4 Mix=mix(Base1,Base2,0.5f);
+
+
+	FragColor = vec4(phong, 1.0f)*Mix;
+
 }
